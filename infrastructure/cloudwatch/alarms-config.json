@@ -1,0 +1,55 @@
+{
+  "Alarms": [
+    {
+      "AlarmName": "EC2-High-CPU-Utilization",
+      "AlarmDescription": "Trigger alarm when EC2 CPU utilization exceeds 80% for 5 minutes",
+      "Namespace": "AWS/EC2",
+      "MetricName": "CPUUtilization",
+      "Dimensions": [
+        {
+          "Name": "InstanceId",
+          "Value": "i-akash-server"
+        }
+      ],
+      "Statistic": "Average",
+      "Period": 300,
+      "EvaluationPeriods": 1,
+      "Threshold": 80.0,
+      "ComparisonOperator": "GreaterThanThreshold"
+    },
+    {
+      "AlarmName": "RDS-Low-Free-Storage",
+      "AlarmDescription": "Trigger alarm when RDS PostgreSQL free storage drops below 5 GB",
+      "Namespace": "AWS/RDS",
+      "MetricName": "FreeStorageSpace",
+      "Dimensions": [
+        {
+          "Name": "DBInstanceIdentifier",
+          "Value": "database-1"
+        }
+      ],
+      "Statistic": "Average",
+      "Period": 300,
+      "EvaluationPeriods": 1,
+      "Threshold": 5368709120,
+      "ComparisonOperator": "LessThanThreshold"
+    },
+    {
+      "AlarmName": "Lambda-API-Errors",
+      "AlarmDescription": "Trigger alarm when Lambda serverless API invocation errors occur",
+      "Namespace": "AWS/Lambda",
+      "MetricName": "Errors",
+      "Dimensions": [
+        {
+          "Name": "FunctionName",
+          "Value": "student-management-api"
+        }
+      ],
+      "Statistic": "Sum",
+      "Period": 60,
+      "EvaluationPeriods": 1,
+      "Threshold": 1.0,
+      "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+    }
+  ]
+}

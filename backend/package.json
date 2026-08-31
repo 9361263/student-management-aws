@@ -1,0 +1,38 @@
+{
+  "name": "student-management-backend",
+  "version": "1.0.0",
+  "description": "Serverless Cloud-Based Student Management and Analytics API using AWS",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "build:lambda": "node scripts/package-lambda.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "keywords": [
+    "aws",
+    "lambda",
+    "rds",
+    "s3",
+    "express",
+    "serverless",
+    "postgresql"
+  ],
+  "author": "Akash K",
+  "license": "MIT",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.600.0",
+    "@aws-sdk/s3-request-presigner": "^3.600.0",
+    "@codegenie/serverless-express": "^4.14.1",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.12.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}

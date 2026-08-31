@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Cloud, Lock, Mail, ShieldCheck, Sparkles, ArrowRight } from 'lucide-react';
+import { Cloud, Lock, Mail, ShieldCheck, ArrowRight } from 'lucide-react';
 
 export const Login = () => {
   const { login } = useAuth();
-  const [email, setEmail] = useState('admin@example.com');
-  const [password, setPassword] = useState('Password@123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -19,16 +19,6 @@ export const Login = () => {
       setError(err.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleQuickFill = (role) => {
-    if (role === 'admin') {
-      setEmail('admin@example.com');
-      setPassword('Password@123');
-    } else {
-      setEmail('ramesh.cse@example.com');
-      setPassword('Password@123');
     }
   };
 
@@ -127,35 +117,8 @@ export const Login = () => {
           </button>
         </form>
 
-        {/* Demo Quick Fill Buttons */}
-        <div style={{ marginTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '1.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', color: '#9ca3af', fontSize: '0.8rem' }}>
-            <Sparkles size={14} color="#ff9900" />
-            <span>Quick Demo Accounts (1-Click Fill):</span>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={() => handleQuickFill('admin')}
-              style={{ fontSize: '0.8rem' }}
-            >
-              🛡️ Admin Demo
-            </button>
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={() => handleQuickFill('faculty')}
-              style={{ fontSize: '0.8rem' }}
-            >
-              👨‍🏫 Faculty Demo
-            </button>
-          </div>
-        </div>
-
         {/* AWS Security Footer */}
-        <div style={{ marginTop: '1.5rem', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', color: '#6b7280', fontSize: '0.75rem' }}>
+        <div style={{ marginTop: '2rem', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', color: '#6b7280', fontSize: '0.75rem' }}>
           <ShieldCheck size={14} color="#10b981" />
           <span>Secured with AWS IAM, JWT & S3 Encryption</span>
         </div>

@@ -59,28 +59,35 @@ The **Serverless Cloud-Based Student Management and Analytics System** is an ent
 
 ---
 
-## ⚙️ Configured AWS Infrastructure
+## ⚙️ Configured AWS Infrastructure Overview
 
-| Service | Identifier / Resource | Specs & Details |
+| Service | Architecture Component | Specs & Details |
 | :--- | :--- | :--- |
-| **Amazon RDS** | `database-1` | PostgreSQL 15/16 • `db.t4g.micro` • `ap-south-1c` |
-| **Amazon S3** | `student-management-docs-akash-2026` | SSE-S3 Encryption • Block Public Access • Presigned URLs |
-| **Amazon EC2** | `13.232.248.71` | Ubuntu 24.04 LTS • Nginx Reverse Proxy • PM2 Daemon |
-| **AWS Lambda** | `student-management-api` | Node.js 20.x • Serverless Express Handler (`lambda.js`) |
-| **IAM** | `AKIA3U4O7ZNV2CBHF3VC` | Least-Privilege Policies for S3, RDS, Lambda, CloudWatch |
+| **Amazon RDS** | Relational Database | PostgreSQL 15/16 • `db.t4g.micro` • Multi-AZ Capable |
+| **Amazon S3** | Object Storage Vault | SSE-S3 Encryption • Block Public Access • Presigned URLs |
+| **Amazon EC2** | Application Host | Ubuntu 24.04 LTS • Nginx Reverse Proxy • PM2 Daemon |
+| **AWS Lambda** | Serverless API Runtime | Node.js 20.x • Serverless Express Handler (`lambda.js`) |
+| **IAM** | Identity & Access Control | Least-Privilege Policies for S3, RDS, Lambda, CloudWatch |
 
 ---
 
 ## 🚀 Getting Started Locally
 
 ### 1. Database Setup
-Execute the PostgreSQL DDL and Seed scripts in your database:
+Execute the PostgreSQL DDL and Seed scripts in your database instance:
 ```bash
-psql -h <RDS_HOST> -U postgres -d student_management -f database/schema.sql
-psql -h <RDS_HOST> -U postgres -d student_management -f database/seed.sql
+psql -h <YOUR_RDS_ENDPOINT> -U postgres -d student_management -f database/schema.sql
+psql -h <YOUR_RDS_ENDPOINT> -U postgres -d student_management -f database/seed.sql
 ```
 
-### 2. Run Backend Server
+### 2. Configure Environment Variables
+Copy `.env.example` to `.env` in the `backend` directory and populate your credentials:
+```bash
+cd backend
+cp .env.example .env
+```
+
+### 3. Run Backend Server
 ```bash
 cd backend
 npm install
@@ -88,23 +95,13 @@ npm start
 # Server starts on http://localhost:5000
 ```
 
-### 3. Run React Frontend
+### 4. Run React Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 # Frontend starts on http://localhost:3000
 ```
-
----
-
-## 🔑 Default Login Accounts
-
-| Role | Email | Password |
-| :--- | :--- | :--- |
-| **Administrator** | `admin@example.com` | `Password@123` |
-| **Faculty (CSE)** | `ramesh.cse@example.com` | `Password@123` |
-| **Faculty (ECE)** | `priya.ece@example.com` | `Password@123` |
 
 ---
 
@@ -121,6 +118,7 @@ npm run dev
 │   │   └── app.js
 │   ├── lambda.js (AWS Lambda Handler)
 │   ├── server.js (Local Server)
+│   ├── .env.example
 │   └── package.json
 ├── frontend/
 │   ├── src/
@@ -139,10 +137,6 @@ npm run dev
 │   ├── ec2/ (deploy.sh, nginx.conf)
 │   ├── cloudwatch/ (alarms-config.json)
 │   └── iam/ (policies.json)
-├── docs/
-│   ├── architecture.md
-│   ├── api-documentation.md
-│   └── aws-setup-guide.md
 └── README.md
 ```
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { analyticsApi, studentApi } from '../services/api';
+import { analyticsApi } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import {
   Users,
   CalendarCheck,
@@ -10,10 +11,10 @@ import {
   Server,
   Cloud,
   ChevronRight,
-  Database,
 } from 'lucide-react';
 
 export const Dashboard = ({ setActiveTab, setSelectedStudentId }) => {
+  const { isAdmin } = useAuth();
   const [stats, setStats] = useState({
     totalStudents: 10,
     averageAttendance: 86.5,
@@ -66,10 +67,10 @@ export const Dashboard = ({ setActiveTab, setSelectedStudentId }) => {
       >
         <div>
           <h1 style={{ fontSize: '1.6rem', marginBottom: '0.4rem' }}>
-            Academic Overview & Cloud Analytics
+            Academic Overview & Analytics Dashboard
           </h1>
           <p style={{ color: '#9ca3af', fontSize: '0.95rem' }}>
-            Live telemetry from Amazon RDS PostgreSQL, S3 Storage, and Lambda API Gateway.
+            Centralized portal for student attendance, marks management, and performance tracking.
           </p>
         </div>
 
@@ -78,7 +79,7 @@ export const Dashboard = ({ setActiveTab, setSelectedStudentId }) => {
             <CalendarCheck size={16} /> Mark Attendance
           </button>
           <button className="btn btn-secondary" onClick={() => setActiveTab('documents')}>
-            <FileText size={16} /> Upload S3 Docs
+            <FileText size={16} /> Upload Documents
           </button>
         </div>
       </div>
@@ -249,35 +250,37 @@ export const Dashboard = ({ setActiveTab, setSelectedStudentId }) => {
         </div>
       </div>
 
-      {/* Cloud Architecture Summary Bar */}
-      <div
-        className="glass-card"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '1rem',
-          border: '1px solid rgba(255, 153, 0, 0.3)',
-          background: 'rgba(255, 153, 0, 0.04)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(255,153,0,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ff9900' }}>
-            <Cloud size={24} />
+      {/* Cloud Architecture Summary Bar (Admin Only) */}
+      {isAdmin && (
+        <div
+          className="glass-card"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '1rem',
+            border: '1px solid rgba(255, 153, 0, 0.3)',
+            background: 'rgba(255, 153, 0, 0.04)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(255,153,0,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ff9900' }}>
+              <Cloud size={24} />
+            </div>
+            <div>
+              <h4 style={{ color: '#ff9900', fontSize: '1rem' }}>AWS Cloud Infrastructure Configured</h4>
+              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>
+                RDS PostgreSQL • S3 Bucket Storage • Lambda API • EC2 Server
+              </span>
+            </div>
           </div>
-          <div>
-            <h4 style={{ color: '#ff9900', fontSize: '1rem' }}>AWS Cloud Infrastructure Configured</h4>
-            <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>
-              RDS PostgreSQL (database-1) • S3 (student-management-docs-akash-2026) • EC2 (13.232.248.71)
-            </span>
-          </div>
-        </div>
 
-        <button className="btn btn-secondary btn-sm" onClick={() => setActiveTab('cloud-status')}>
-          Inspect Cloud Topology <ChevronRight size={14} />
-        </button>
-      </div>
+          <button className="btn btn-secondary btn-sm" onClick={() => setActiveTab('cloud-status')}>
+            Inspect Cloud Topology <ChevronRight size={14} />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

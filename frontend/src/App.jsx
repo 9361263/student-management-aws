@@ -14,14 +14,14 @@ import { Analytics } from './pages/Analytics';
 import { CloudStatus } from './pages/CloudStatus';
 
 export const App = () => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, isAdmin, loading } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedStudentId, setSelectedStudentId] = useState(1);
 
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0b0f19', color: '#9ca3af' }}>
-        <p>Connecting to AWS Cloud Services...</p>
+        <p>Loading Student Portal...</p>
       </div>
     );
   }
@@ -30,8 +30,11 @@ export const App = () => {
     return <Login />;
   }
 
+  // Guard against non-admin users accessing admin-only pages
+  const currentTab = (!isAdmin && activeTab === 'cloud-status') ? 'dashboard' : activeTab;
+
   const getPageTitle = () => {
-    switch (activeTab) {
+    switch (currentTab) {
       case 'dashboard':
         return 'System Dashboard';
       case 'students':
@@ -58,47 +61,47 @@ export const App = () => {
   return (
     <div className="app-container">
       {/* Navigation Sidebar */}
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Sidebar activeTab={currentTab} setActiveTab={setActiveTab} />
 
       {/* Main Page Content */}
       <div className="main-content">
         <Navbar currentTitle={getPageTitle()} />
 
         <main>
-          {activeTab === 'dashboard' && (
+          {currentTab === 'dashboard' && (
             <Dashboard
               setActiveTab={setActiveTab}
               setSelectedStudentId={setSelectedStudentId}
             />
           )}
 
-          {activeTab === 'students' && (
+          {currentTab === 'students' && (
             <Students
               setActiveTab={setActiveTab}
               setSelectedStudentId={setSelectedStudentId}
             />
           )}
 
-          {activeTab === 'add-student' && (
+          {currentTab === 'add-student' && (
             <AddStudent setActiveTab={setActiveTab} />
           )}
 
-          {activeTab === 'student-details' && (
+          {currentTab === 'student-details' && (
             <StudentDetails
               studentId={selectedStudentId}
               setActiveTab={setActiveTab}
             />
           )}
 
-          {activeTab === 'attendance' && <Attendance />}
+          {currentTab === 'attendance' && <Attendance />}
 
-          {activeTab === 'marks' && <Marks />}
+          {currentTab === 'marks' && <Marks />}
 
-          {activeTab === 'documents' && <Documents />}
+          {currentTab === 'documents' && <Documents />}
 
-          {activeTab === 'analytics' && <Analytics />}
+          {currentTab === 'analytics' && <Analytics />}
 
-          {activeTab === 'cloud-status' && <CloudStatus />}
+          {currentTab === 'cloud-status' && isAdmin && <CloudStatus />}
         </main>
       </div>
     </div>

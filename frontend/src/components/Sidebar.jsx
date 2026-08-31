@@ -23,7 +23,7 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
     { id: 'marks', label: 'Marks & GPA', icon: GraduationCap },
     { id: 'documents', label: 'S3 Documents', icon: FileText },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    { id: 'cloud-status', label: 'AWS Cloud Status', icon: Server },
+    ...(isAdmin ? [{ id: 'cloud-status', label: 'AWS Cloud Status', icon: Server }] : []),
   ];
 
   return (

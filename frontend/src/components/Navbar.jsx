@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { Cloud, Shield, LogOut, User, Database } from 'lucide-react';
 
 export const Navbar = ({ currentTitle = 'Dashboard' }) => {
-  const { user, logout } = useAuth();
+  const { user, isAdmin, logout } = useAuth();
 
   return (
     <header className="navbar">
@@ -12,17 +12,20 @@ export const Navbar = ({ currentTitle = 'Dashboard' }) => {
       </div>
 
       <div className="navbar-right">
-        {/* AWS Cloud Badge */}
-        <div className="badge-aws" title="Connected to AWS ap-south-1">
-          <Cloud size={16} />
-          <span>AWS: ap-south-1 (Mumbai)</span>
-        </div>
+        {/* AWS Cloud Badge & Database Status (Admin Only) */}
+        {isAdmin && (
+          <>
+            <div className="badge-aws" title="Connected to AWS ap-south-1">
+              <Cloud size={16} />
+              <span>AWS: ap-south-1</span>
+            </div>
 
-        {/* Database Status */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', color: '#10b981' }}>
-          <Database size={15} />
-          <span>PostgreSQL Active</span>
-        </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', color: '#10b981' }}>
+              <Database size={15} />
+              <span>PostgreSQL Active</span>
+            </div>
+          </>
+        )}
 
         {/* User Info & Logout */}
         <div className="user-profile-badge">

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { studentApi, documentApi } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import {
   FileText,
   UploadCloud,
@@ -12,6 +13,7 @@ import {
 } from 'lucide-react';
 
 export const Documents = () => {
+  const { isAdmin } = useAuth();
   const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState('1');
   const [documentType, setDocumentType] = useState('CERTIFICATE');
@@ -64,7 +66,7 @@ export const Documents = () => {
     setSuccessMsg('');
 
     try {
-      // Step 1: Request Presigned URL from Backend Lambda
+      // Step 1: Request Presigned Upload URL
       const urlRes = await documentApi.getUploadUrl({
         fileName: file.name,
         mimeType: file.type || 'application/octet-stream',
@@ -74,25 +76,31 @@ export const Documents = () => {
 
       setUploadProgress(60);
 
-      // Step 2: Upload file directly to Amazon S3
+      // Step 2: Upload file directly to Storage
       if (urlRes?.uploadUrl) {
         await documentApi.uploadDirectToS3(urlRes.uploadUrl, file);
       }
 
       setUploadProgress(85);
 
-      // Step 3: Record metadata in RDS PostgreSQL
-      await documentApi.confirmUpload({
+      // Step 3: Record metadata in Database
+      const confirmRes = await documentApi.confirmUpload({
         studentId: selectedStudent,
         fileName: file.name,
         s3Key: urlRes?.s3Key || `students/${selectedStudent}/${file.name}`,
         documentType,
         fileSize: file.size,
-        mimeType: file.type,
+        mimeType: file.type || 'application/pdf',
       });
 
       setUploadProgress(100);
-      setSuccessMsg(`File "${file.name}" securely uploaded to Amazon S3!`);
+      setSuccessMsg(`File "${file.name}" uploaded successfully!`);
+
+      if (confirmRes?.document) {
+        const newDoc = confirmRes.document;
+        setDocuments((prev) => [newDoc, ...prev.filter((d) => d.id !== newDoc.id)]);
+      }
+
       setFile(null);
       loadDocuments(selectedStudent);
       setTimeout(() => setSuccessMsg(''), 4000);
@@ -116,7 +124,7 @@ export const Documents = () => {
   };
 
   const handleDelete = async (docId) => {
-    if (!window.confirm('Delete this document from S3 and database?')) return;
+    if (!window.confirm('Are you sure you want to delete this document?')) return;
     try {
       await documentApi.delete(docId);
       loadDocuments(selectedStudent);
@@ -128,13 +136,13 @@ export const Documents = () => {
   return (
     <div className="page-wrapper">
       <div style={{ marginBottom: '1.5rem' }}>
-        <h1 style={{ fontSize: '1.6rem' }}>Amazon S3 Document Vault</h1>
+        <h1 style={{ fontSize: '1.6rem' }}>Document Vault</h1>
         <p style={{ color: '#9ca3af', fontSize: '0.9rem' }}>
-          Secure, serverless direct browser-to-S3 document upload with Presigned URLs.
+          Secure student document storage and academic file management vault.
         </p>
       </div>
 
-      {/* S3 Bucket Info Card */}
+      {/* Cloud Storage Status Card (Admin Details / Encrypted Badge) */}
       <div
         className="glass-card"
         style={{
@@ -144,22 +152,26 @@ export const Documents = () => {
           alignItems: 'center',
           flexWrap: 'wrap',
           gap: '1rem',
-          border: '1px solid rgba(255, 153, 0, 0.3)',
-          background: 'rgba(255, 153, 0, 0.05)',
+          border: '1px solid rgba(59, 130, 246, 0.3)',
+          background: 'rgba(59, 130, 246, 0.05)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <HardDrive size={22} color="#ff9900" />
+          <HardDrive size={22} color="#3b82f6" />
           <div>
-            <div style={{ fontWeight: 600, color: '#ff9900' }}>Active S3 Bucket: student-management-docs-akash-2026</div>
+            <div style={{ fontWeight: 600, color: '#3b82f6' }}>
+              {isAdmin ? 'Active Cloud Storage: Protected Bucket' : 'Encrypted Document Vault'}
+            </div>
             <div style={{ fontSize: '0.8rem', color: '#9ca3af' }}>
-              Region: ap-south-1 • SSE-S3 Encryption • Block Public Access Enabled
+              {isAdmin
+                ? 'SSE-S3 Encryption • Block Public Access Enabled • Presigned URLs'
+                : 'Secure Cloud Upload • AES-256 Encrypted • Presigned Links'}
             </div>
           </div>
         </div>
 
         <div className="badge badge-success">
-          <Shield size={12} /> AWS IAM Protected
+          <Shield size={12} /> Encrypted & Secured
         </div>
       </div>
 
@@ -186,7 +198,7 @@ export const Documents = () => {
         {/* Upload Form */}
         <div className="glass-card">
           <h3 style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <UploadCloud size={20} color="#3b82f6" /> Upload Student Document to S3
+            <UploadCloud size={20} color="#3b82f6" /> Upload Student Document
           </h3>
 
           <form onSubmit={handleUpload}>
@@ -237,7 +249,7 @@ export const Documents = () => {
             {uploading && (
               <div style={{ marginBottom: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.25rem' }}>
-                  <span>Uploading to Amazon S3...</span>
+                  <span>Uploading document...</span>
                   <span>{uploadProgress}%</span>
                 </div>
                 <div style={{ height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px' }}>
@@ -256,15 +268,15 @@ export const Documents = () => {
 
             <button type="submit" className="btn btn-gradient" style={{ width: '100%' }} disabled={uploading}>
               <UploadCloud size={16} />
-              {uploading ? 'Processing Direct S3 Upload...' : 'Upload Directly to Amazon S3'}
+              {uploading ? 'Uploading Document...' : 'Upload Document'}
             </button>
           </form>
         </div>
 
-        {/* Existing S3 Documents List */}
+        {/* Existing Documents List */}
         <div className="glass-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-            <h3>Uploaded S3 Documents</h3>
+            <h3>Uploaded Documents</h3>
             <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{documents.length} Files</span>
           </div>
 

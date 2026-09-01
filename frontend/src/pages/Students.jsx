@@ -76,7 +76,7 @@ export const Students = ({ setActiveTab, setSelectedStudentId }) => {
         <div>
           <h1 style={{ fontSize: '1.6rem' }}>Student Directory</h1>
           <p style={{ color: '#9ca3af', fontSize: '0.9rem' }}>
-            Manage student records, academic profiles, and AWS S3 document links.
+            Manage student records, academic profiles, and document links.
           </p>
         </div>
 
@@ -171,7 +171,7 @@ export const Students = ({ setActiveTab, setSelectedStudentId }) => {
             {loading ? (
               <tr>
                 <td colSpan="8" style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af' }}>
-                  Loading student records from PostgreSQL...
+                  Loading student records...
                 </td>
               </tr>
             ) : students.length === 0 ? (

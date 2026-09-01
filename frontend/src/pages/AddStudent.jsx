@@ -49,7 +49,7 @@ export const AddStudent = ({ setActiveTab }) => {
 
     try {
       await studentApi.create(formData);
-      setSuccessMsg('Student successfully registered in AWS RDS Database!');
+      setSuccessMsg('Student successfully registered!');
       setTimeout(() => {
         setActiveTab('students');
       }, 1500);
@@ -254,7 +254,7 @@ export const AddStudent = ({ setActiveTab }) => {
             </button>
             <button type="submit" className="btn btn-gradient" disabled={loading}>
               <UserPlus size={16} />
-              {loading ? 'Registering...' : 'Save Student to RDS'}
+              {loading ? 'Registering...' : 'Register Student'}
             </button>
           </div>
         </form>

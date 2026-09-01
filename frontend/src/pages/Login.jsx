@@ -45,7 +45,7 @@ export const Login = () => {
           </div>
           <h1 style={{ fontSize: '1.75rem', marginBottom: '0.5rem' }}>CloudEdu Portal</h1>
           <p style={{ color: '#9ca3af', fontSize: '0.9rem' }}>
-            Serverless Student Management & Analytics using AWS
+            Student Management & Academic Analytics Portal
           </p>
         </div>
 
@@ -117,10 +117,10 @@ export const Login = () => {
           </button>
         </form>
 
-        {/* AWS Security Footer */}
+        {/* Security Footer */}
         <div style={{ marginTop: '2rem', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', color: '#6b7280', fontSize: '0.75rem' }}>
           <ShieldCheck size={14} color="#10b981" />
-          <span>Secured with AWS IAM, JWT & S3 Encryption</span>
+          <span>Secured with Encrypted Authentication & JWT</span>
         </div>
       </div>
     </div>

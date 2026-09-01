@@ -58,7 +58,7 @@ export const CloudStatus = () => {
       name: 'AWS IAM & Security',
       type: 'Identity & Access Management',
       status: 'ACTIVE',
-      id: 'AKIA3U4O7ZNV2CBHF3VC',
+      id: 'iam-user-akash (Env Configured)',
       details: 'S3FullAccess • RDSFullAccess • LambdaExecutionRole',
       vpc: 'IAM Global Policy Engine',
       icon: ShieldCheck,

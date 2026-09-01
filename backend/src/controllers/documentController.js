@@ -1,5 +1,15 @@
-const { query } = require('../config/db');
-const { generateUploadUrl, generateDownloadUrl, deleteS3Object } = require('../config/s3');
+// In-memory document store for session/demo mode when database is initializing
+const localDocumentsStore = [
+  {
+    id: 1,
+    student_id: 1,
+    file_name: 'student_id_proof.pdf',
+    s3_key: 'students/1/id_proof.pdf',
+    document_type: 'ID_PROOF',
+    file_size: 245800,
+    uploaded_at: new Date().toISOString(),
+  },
+];
 
 /**
  * Step 1: Request a Presigned S3 Upload URL
@@ -7,18 +17,19 @@ const { generateUploadUrl, generateDownloadUrl, deleteS3Object } = require('../c
 const getUploadUrl = async (req, res) => {
   try {
     const { fileName, mimeType, studentId, documentType = 'OTHER' } = req.body;
+    const finalMimeType = mimeType || 'application/pdf';
 
-    if (!fileName || !mimeType || !studentId) {
+    if (!fileName || !studentId) {
       return res.status(400).json({
         success: false,
-        message: 'fileName, mimeType, and studentId are required.',
+        message: 'fileName and studentId are required.',
       });
     }
 
     try {
       const { uploadUrl, s3Key, bucket, region } = await generateUploadUrl(
         fileName,
-        mimeType,
+        finalMimeType,
         studentId,
         documentType
       );
@@ -81,25 +92,31 @@ const confirmUpload = async (req, res) => {
         mimeType || 'application/octet-stream',
       ]);
 
+      const newDoc = result.rows[0];
+      localDocumentsStore.unshift(newDoc);
+
       return res.status(201).json({
         success: true,
         message: 'Document metadata recorded in RDS successfully.',
-        document: result.rows[0],
+        document: newDoc,
       });
     } catch (dbErr) {
+      const mockDoc = {
+        id: Date.now(),
+        student_id: parseInt(studentId, 10),
+        file_name: fileName,
+        s3_key: s3Key,
+        document_type: documentType.toUpperCase(),
+        file_size: fileSize ? parseInt(fileSize, 10) : 150000,
+        mime_type: mimeType || 'application/pdf',
+        uploaded_at: new Date().toISOString(),
+      };
+      localDocumentsStore.unshift(mockDoc);
+
       return res.status(201).json({
         success: true,
         message: 'Document metadata recorded (session mode).',
-        document: {
-          id: Math.floor(Math.random() * 1000),
-          student_id: studentId,
-          file_name: fileName,
-          s3_key: s3Key,
-          document_type: documentType,
-          file_size: fileSize,
-          mime_type: mimeType,
-          uploaded_at: new Date().toISOString(),
-        },
+        document: mockDoc,
       });
     }
   } catch (error) {
@@ -129,7 +146,9 @@ const getDownloadUrl = async (req, res) => {
       s3Key = result.rows[0].s3_key;
       fileName = result.rows[0].file_name;
     } catch (dbErr) {
-      s3Key = `students/1/documents/sample_${documentId}.pdf`;
+      const found = localDocumentsStore.find((d) => d.id === documentId);
+      s3Key = found ? found.s3_key : `students/1/documents/sample_${documentId}.pdf`;
+      fileName = found ? found.file_name : 'document.pdf';
     }
 
     try {
@@ -173,20 +192,11 @@ const getStudentDocuments = async (req, res) => {
         documents: result.rows,
       });
     } catch (dbErr) {
+      const docs = localDocumentsStore.filter((d) => parseInt(d.student_id, 10) === studentId);
       return res.status(200).json({
         success: true,
-        count: 1,
-        documents: [
-          {
-            id: 1,
-            student_id: studentId,
-            file_name: 'student_id_proof.pdf',
-            s3_key: `students/${studentId}/id_proof.pdf`,
-            document_type: 'ID_PROOF',
-            file_size: 245800,
-            uploaded_at: new Date().toISOString(),
-          },
-        ],
+        count: docs.length,
+        documents: docs,
       });
     }
   } catch (error) {
@@ -221,6 +231,11 @@ const deleteDocument = async (req, res) => {
       } catch (s3Err) {
         console.warn('S3 object deletion warning:', s3Err.message);
       }
+    }
+
+    const idx = localDocumentsStore.findIndex((d) => d.id === documentId);
+    if (idx !== -1) {
+      localDocumentsStore.splice(idx, 1);
     }
 
     return res.status(200).json({

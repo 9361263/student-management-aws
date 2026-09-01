@@ -21,9 +21,9 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
     ...(isAdmin ? [{ id: 'add-student', label: 'Add Student', icon: UserPlus }] : []),
     { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
     { id: 'marks', label: 'Marks & GPA', icon: GraduationCap },
-    { id: 'documents', label: 'S3 Documents', icon: FileText },
+    { id: 'documents', label: 'Document Vault', icon: FileText },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    ...(isAdmin ? [{ id: 'cloud-status', label: 'AWS Cloud Status', icon: Server }] : []),
+    ...(isAdmin ? [{ id: 'cloud-status', label: 'Infrastructure Status', icon: Server }] : []),
   ];
 
   return (
@@ -34,7 +34,7 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
         </div>
         <div className="sidebar-title">
           <h2>CloudEdu</h2>
-          <span>AWS Serverless</span>
+          <span>Management Portal</span>
         </div>
       </div>
 
@@ -58,9 +58,9 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
 
       <div className="sidebar-footer">
         <div style={{ fontSize: '0.75rem', color: '#6b7280', textAlign: 'center' }}>
-          <span>AWS Mini Project</span>
+          <span>Student Portal</span>
           <br />
-          <strong style={{ color: '#9ca3af' }}>Prime Vector 2026</strong>
+          <strong style={{ color: '#9ca3af' }}>Academic Analytics v2.0</strong>
         </div>
       </div>
     </aside>

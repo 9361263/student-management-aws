@@ -89,11 +89,20 @@ export const attendanceApi = {
   getLowAttendance: () => request('/attendance/low-attendance'),
 };
 
-// Marks APIs
+// Marks & CGPA APIs
 export const marksApi = {
+  getAllSummary: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request(`/marks/summary?${query}`);
+  },
   addOrUpdate: (data) =>
     request('/marks', {
       method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  update: (id, data) =>
+    request(`/marks/${id}`, {
+      method: 'PUT',
       body: JSON.stringify(data),
     }),
   getStudentMarks: (studentId) => request(`/marks/student/${studentId}`),

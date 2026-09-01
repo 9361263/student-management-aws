@@ -15,9 +15,9 @@ export const Navbar = ({ currentTitle = 'Dashboard' }) => {
         {/* AWS Cloud Badge & Database Status (Admin Only) */}
         {isAdmin && (
           <>
-            <div className="badge-aws" title="Connected to AWS ap-south-1">
+            <div className="badge-aws" title="Connected to Cloud Service Region">
               <Cloud size={16} />
-              <span>AWS: ap-south-1</span>
+              <span>Region: ap-south-1</span>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', color: '#10b981' }}>

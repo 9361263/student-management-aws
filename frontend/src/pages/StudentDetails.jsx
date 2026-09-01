@@ -45,7 +45,7 @@ export const StudentDetails = ({ studentId = 1, setActiveTab }) => {
         window.open(res.downloadUrl, '_blank');
       }
     } catch (err) {
-      alert('Error fetching download link from S3: ' + err.message);
+      alert('Error fetching download link: ' + err.message);
     }
   };
 
@@ -53,7 +53,7 @@ export const StudentDetails = ({ studentId = 1, setActiveTab }) => {
     return (
       <div className="page-wrapper">
         <p style={{ color: '#9ca3af', textAlign: 'center', padding: '3rem' }}>
-          Loading student profile from RDS PostgreSQL...
+          Loading student profile...
         </p>
       </div>
     );
@@ -166,7 +166,7 @@ export const StudentDetails = ({ studentId = 1, setActiveTab }) => {
           className={`btn ${activeTab === 'documents' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setSubTab('documents')}
         >
-          <FileText size={16} /> S3 Documents ({student.documents?.length || 0})
+          <FileText size={16} /> Documents ({student.documents?.length || 0})
         </button>
       </div>
 
@@ -275,11 +275,11 @@ export const StudentDetails = ({ studentId = 1, setActiveTab }) => {
         </div>
       )}
 
-      {/* Tab 3: S3 Documents */}
+      {/* Tab 3: Documents */}
       {activeTab === 'documents' && (
         <div className="glass-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-            <h3>Amazon S3 Stored Documents</h3>
+            <h3>Student Documents</h3>
             <button className="btn btn-primary btn-sm" onClick={() => setActiveTab('documents')}>
               Upload New Document
             </button>
@@ -287,7 +287,7 @@ export const StudentDetails = ({ studentId = 1, setActiveTab }) => {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
             {!student.documents || student.documents.length === 0 ? (
-              <p style={{ color: '#9ca3af' }}>No documents uploaded yet to S3.</p>
+              <p style={{ color: '#9ca3af' }}>No documents uploaded yet.</p>
             ) : (
               student.documents.map((doc) => (
                 <div
@@ -311,7 +311,7 @@ export const StudentDetails = ({ studentId = 1, setActiveTab }) => {
                       Type: <span className="badge badge-info">{doc.document_type}</span>
                     </div>
                     <div style={{ fontSize: '0.7rem', color: '#6b7280', wordBreak: 'break-all' }}>
-                      S3 Key: {doc.s3_key}
+                      Ref: {doc.s3_key}
                     </div>
                   </div>
 
@@ -320,7 +320,7 @@ export const StudentDetails = ({ studentId = 1, setActiveTab }) => {
                     style={{ marginTop: '1rem', width: '100%' }}
                     onClick={() => handleDownloadDoc(doc.id, doc.file_name)}
                   >
-                    <Download size={14} /> Presigned S3 Download
+                    <Download size={14} /> Download Document
                   </button>
                 </div>
               ))

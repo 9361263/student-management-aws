@@ -48,11 +48,11 @@ export const App = () => {
       case 'marks':
         return 'Marks & Examinations';
       case 'documents':
-        return 'S3 Document Storage';
+        return 'Document Vault';
       case 'analytics':
         return 'Institutional Analytics';
       case 'cloud-status':
-        return 'AWS Cloud Architecture';
+        return 'System Infrastructure';
       default:
         return 'Student Management Portal';
     }

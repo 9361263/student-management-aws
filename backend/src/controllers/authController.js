@@ -9,21 +9,21 @@ const DEMO_USERS = [
     id: 1,
     name: 'System Administrator',
     email: 'admin@example.com',
-    passwordHash: '$2b$10$epRfZG9.wK8GqPz2e0n0n.WbT9yX8dG5d6f4R1c8v3w0q7a6z5e2y', // Password@123
+    passwordHash: '$2a$10$E/Rkp.D1pnMYD.huTQyPqehh2rkC7rlF8i9IEyigRoYP00.ImZXqu', // Password@123
     role: 'ADMIN',
   },
   {
     id: 2,
     name: 'Dr. Ramesh Kumar (CSE HOD)',
     email: 'ramesh.cse@example.com',
-    passwordHash: '$2b$10$epRfZG9.wK8GqPz2e0n0n.WbT9yX8dG5d6f4R1c8v3w0q7a6z5e2y', // Password@123
+    passwordHash: '$2a$10$E/Rkp.D1pnMYD.huTQyPqehh2rkC7rlF8i9IEyigRoYP00.ImZXqu', // Password@123
     role: 'FACULTY',
   },
   {
     id: 3,
     name: 'Prof. Priya Sharma (ECE)',
     email: 'priya.ece@example.com',
-    passwordHash: '$2b$10$epRfZG9.wK8GqPz2e0n0n.WbT9yX8dG5d6f4R1c8v3w0q7a6z5e2y', // Password@123
+    passwordHash: '$2a$10$E/Rkp.D1pnMYD.huTQyPqehh2rkC7rlF8i9IEyigRoYP00.ImZXqu', // Password@123
     role: 'FACULTY',
   }
 ];
@@ -71,11 +71,8 @@ const login = async (req, res) => {
       });
     }
 
-    // Compare bcrypt password or direct demo match
-    const isMatch = await bcrypt.compare(password, user.password_hash) || 
-                    password === 'Password@123' || 
-                    password === 'Admin@123' ||
-                    password === 'cloudakash';
+    // Compare bcrypt password
+    const isMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!isMatch) {
       return res.status(401).json({

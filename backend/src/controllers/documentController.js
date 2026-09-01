@@ -1,18 +1,8 @@
-// In-memory document store for session/demo mode when database is initializing
-const localDocumentsStore = [
-  {
-    id: 1,
-    student_id: 1,
-    file_name: 'student_id_proof.pdf',
-    s3_key: 'students/1/id_proof.pdf',
-    document_type: 'ID_PROOF',
-    file_size: 245800,
-    uploaded_at: new Date().toISOString(),
-  },
-];
+const { query } = require('../config/db');
+const { generateUploadUrl, generateDownloadUrl, deleteS3Object } = require('../config/s3');
 
 /**
- * Step 1: Request a Presigned S3 Upload URL
+ * Step 1: Request a Presigned S3 Upload URL from Amazon S3
  */
 const getUploadUrl = async (req, res) => {
   try {
@@ -26,33 +16,22 @@ const getUploadUrl = async (req, res) => {
       });
     }
 
-    try {
-      const { uploadUrl, s3Key, bucket, region } = await generateUploadUrl(
-        fileName,
-        finalMimeType,
-        studentId,
-        documentType
-      );
+    const { uploadUrl, s3Key, bucket, region } = await generateUploadUrl(
+      fileName,
+      finalMimeType,
+      studentId,
+      documentType
+    );
 
-      return res.status(200).json({
-        success: true,
-        message: 'Presigned S3 Upload URL generated.',
-        uploadUrl,
-        s3Key,
-        bucket,
-        region,
-        instructions: 'Use an HTTP PUT request with the binary file body and matching Content-Type header.',
-      });
-    } catch (s3Err) {
-      console.warn('S3 generation warning:', s3Err.message);
-      // Mock upload URL for offline testing
-      return res.status(200).json({
-        success: true,
-        message: 'Presigned S3 Upload URL generated (Mock)',
-        uploadUrl: `https://student-management-docs-akash-2026.s3.ap-south-1.amazonaws.com/students/${studentId}/${Date.now()}_${fileName}`,
-        s3Key: `students/${studentId}/${Date.now()}_${fileName}`,
-      });
-    }
+    return res.status(200).json({
+      success: true,
+      message: 'Presigned S3 Upload URL generated successfully.',
+      uploadUrl,
+      s3Key,
+      bucket,
+      region,
+      instructions: 'Use an HTTP PUT request directly to Amazon S3 with matching Content-Type header.',
+    });
   } catch (error) {
     console.error('Error generating upload URL:', error);
     return res.status(500).json({
@@ -82,128 +61,81 @@ const confirmUpload = async (req, res) => {
       RETURNING *
     `;
 
-    try {
-      const result = await query(sql, [
-        parseInt(studentId, 10),
-        fileName,
-        s3Key,
-        documentType.toUpperCase(),
-        fileSize ? parseInt(fileSize, 10) : null,
-        mimeType || 'application/octet-stream',
-      ]);
+    const result = await query(sql, [
+      parseInt(studentId, 10),
+      fileName,
+      s3Key,
+      documentType.toUpperCase(),
+      fileSize ? parseInt(fileSize, 10) : null,
+      mimeType || 'application/octet-stream',
+    ]);
 
-      const newDoc = result.rows[0];
-      localDocumentsStore.unshift(newDoc);
-
-      return res.status(201).json({
-        success: true,
-        message: 'Document metadata recorded in RDS successfully.',
-        document: newDoc,
-      });
-    } catch (dbErr) {
-      const mockDoc = {
-        id: Date.now(),
-        student_id: parseInt(studentId, 10),
-        file_name: fileName,
-        s3_key: s3Key,
-        document_type: documentType.toUpperCase(),
-        file_size: fileSize ? parseInt(fileSize, 10) : 150000,
-        mime_type: mimeType || 'application/pdf',
-        uploaded_at: new Date().toISOString(),
-      };
-      localDocumentsStore.unshift(mockDoc);
-
-      return res.status(201).json({
-        success: true,
-        message: 'Document metadata recorded (session mode).',
-        document: mockDoc,
-      });
-    }
+    return res.status(201).json({
+      success: true,
+      message: 'Document metadata recorded in RDS PostgreSQL successfully.',
+      document: result.rows[0],
+    });
   } catch (error) {
     console.error('Error confirming upload:', error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to record document metadata.',
+      message: 'Failed to record document metadata in database.',
     });
   }
 };
 
 /**
- * Step 3: Get Presigned Download URL for viewing or downloading a file
+ * Step 3: Get Presigned Download URL for viewing or downloading a file from Amazon S3
  */
 const getDownloadUrl = async (req, res) => {
   try {
     const documentId = parseInt(req.params.id, 10);
 
-    let s3Key = null;
-    let fileName = 'document.pdf';
-
-    try {
-      const result = await query('SELECT * FROM documents WHERE id = $1', [documentId]);
-      if (result.rows.length === 0) {
-        return res.status(404).json({ success: false, message: 'Document not found.' });
-      }
-      s3Key = result.rows[0].s3_key;
-      fileName = result.rows[0].file_name;
-    } catch (dbErr) {
-      const found = localDocumentsStore.find((d) => d.id === documentId);
-      s3Key = found ? found.s3_key : `students/1/documents/sample_${documentId}.pdf`;
-      fileName = found ? found.file_name : 'document.pdf';
+    const result = await query('SELECT * FROM documents WHERE id = $1', [documentId]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Document record not found in database.' });
     }
 
-    try {
-      const downloadUrl = await generateDownloadUrl(s3Key);
-      return res.status(200).json({
-        success: true,
-        fileName,
-        downloadUrl,
-      });
-    } catch (s3Err) {
-      return res.status(200).json({
-        success: true,
-        fileName,
-        downloadUrl: `https://student-management-docs-akash-2026.s3.ap-south-1.amazonaws.com/${s3Key}`,
-      });
-    }
+    const s3Key = result.rows[0].s3_key;
+    const fileName = result.rows[0].file_name;
+    const downloadUrl = await generateDownloadUrl(s3Key);
+
+    return res.status(200).json({
+      success: true,
+      fileName,
+      downloadUrl,
+    });
   } catch (error) {
     console.error('Error generating download URL:', error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to generate download URL.',
+      message: 'Failed to generate S3 download URL.',
     });
   }
 };
 
 /**
- * Get all documents belonging to a student
+ * Get all documents belonging to a student from RDS PostgreSQL
  */
 const getStudentDocuments = async (req, res) => {
   try {
     const studentId = parseInt(req.params.studentId, 10);
 
-    try {
-      const result = await query(
-        'SELECT * FROM documents WHERE student_id = $1 ORDER BY uploaded_at DESC',
-        [studentId]
-      );
-      return res.status(200).json({
-        success: true,
-        count: result.rows.length,
-        documents: result.rows,
-      });
-    } catch (dbErr) {
-      const docs = localDocumentsStore.filter((d) => parseInt(d.student_id, 10) === studentId);
-      return res.status(200).json({
-        success: true,
-        count: docs.length,
-        documents: docs,
-      });
-    }
+    const result = await query(
+      'SELECT * FROM documents WHERE student_id = $1 ORDER BY uploaded_at DESC',
+      [studentId]
+    );
+
+    return res.status(200).json({
+      success: true,
+      count: result.rows.length,
+      documents: result.rows,
+    });
   } catch (error) {
     console.error('Error fetching documents:', error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to fetch student documents.',
+      message: 'Failed to fetch student documents from database.',
     });
   }
 };
@@ -215,32 +147,19 @@ const deleteDocument = async (req, res) => {
   try {
     const documentId = parseInt(req.params.id, 10);
 
-    let s3Key = null;
-    try {
-      const result = await query('DELETE FROM documents WHERE id = $1 RETURNING s3_key', [documentId]);
-      if (result.rows.length > 0) {
-        s3Key = result.rows[0].s3_key;
-      }
-    } catch (dbErr) {
-      console.warn('DB delete bypassed:', dbErr.message);
+    const result = await query('DELETE FROM documents WHERE id = $1 RETURNING s3_key', [documentId]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Document not found in database.' });
     }
 
+    const s3Key = result.rows[0].s3_key;
     if (s3Key) {
-      try {
-        await deleteS3Object(s3Key);
-      } catch (s3Err) {
-        console.warn('S3 object deletion warning:', s3Err.message);
-      }
-    }
-
-    const idx = localDocumentsStore.findIndex((d) => d.id === documentId);
-    if (idx !== -1) {
-      localDocumentsStore.splice(idx, 1);
+      await deleteS3Object(s3Key);
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Document deleted from S3 and database successfully.',
+      message: 'Document deleted from Amazon S3 and RDS PostgreSQL successfully.',
     });
   } catch (error) {
     console.error('Error deleting document:', error);

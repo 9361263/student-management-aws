@@ -3,31 +3,6 @@ const jwt = require('jsonwebtoken');
 const { query } = require('../config/db');
 const { JWT_SECRET } = require('../middleware/authMiddleware');
 
-// Fallback demo users if DB is initializing
-const DEMO_USERS = [
-  {
-    id: 1,
-    name: 'System Administrator',
-    email: 'admin@example.com',
-    passwordHash: '$2a$10$E/Rkp.D1pnMYD.huTQyPqehh2rkC7rlF8i9IEyigRoYP00.ImZXqu', // Password@123
-    role: 'ADMIN',
-  },
-  {
-    id: 2,
-    name: 'Dr. Ramesh Kumar (CSE HOD)',
-    email: 'ramesh.cse@example.com',
-    passwordHash: '$2a$10$E/Rkp.D1pnMYD.huTQyPqehh2rkC7rlF8i9IEyigRoYP00.ImZXqu', // Password@123
-    role: 'FACULTY',
-  },
-  {
-    id: 3,
-    name: 'Prof. Priya Sharma (ECE)',
-    email: 'priya.ece@example.com',
-    passwordHash: '$2a$10$E/Rkp.D1pnMYD.huTQyPqehh2rkC7rlF8i9IEyigRoYP00.ImZXqu', // Password@123
-    role: 'FACULTY',
-  }
-];
-
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -39,37 +14,19 @@ const login = async (req, res) => {
       });
     }
 
-    let user = null;
+    const result = await query(
+      'SELECT id, name, email, password_hash, role FROM users WHERE LOWER(email) = LOWER($1)',
+      [email.trim()]
+    );
 
-    try {
-      const result = await query(
-        'SELECT id, name, email, password_hash, role FROM users WHERE LOWER(email) = LOWER($1)',
-        [email.trim()]
-      );
-      if (result.rows.length > 0) {
-        user = result.rows[0];
-      }
-    } catch (dbErr) {
-      console.warn('Database offline or unreachable, checking demo seed accounts:', dbErr.message);
-      // Fallback check
-      const demoMatch = DEMO_USERS.find((u) => u.email.toLowerCase() === email.toLowerCase().trim());
-      if (demoMatch) {
-        user = {
-          id: demoMatch.id,
-          name: demoMatch.name,
-          email: demoMatch.email,
-          password_hash: demoMatch.passwordHash,
-          role: demoMatch.role,
-        };
-      }
-    }
-
-    if (!user) {
+    if (result.rows.length === 0) {
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password.',
       });
     }
+
+    const user = result.rows[0];
 
     // Compare bcrypt password
     const isMatch = await bcrypt.compare(password, user.password_hash);
@@ -162,9 +119,9 @@ const getMe = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(200).json({
-        success: true,
-        user: req.user,
+      return res.status(404).json({
+        success: false,
+        message: 'User account not found.',
       });
     }
 
@@ -173,9 +130,9 @@ const getMe = async (req, res) => {
       user: result.rows[0],
     });
   } catch (error) {
-    return res.status(200).json({
-      success: true,
-      user: req.user,
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve user profile.',
     });
   }
 };
@@ -188,9 +145,9 @@ const listUsers = async (req, res) => {
       users: result.rows,
     });
   } catch (error) {
-    return res.status(200).json({
-      success: true,
-      users: DEMO_USERS.map(({ passwordHash, ...rest }) => rest),
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve user list.',
     });
   }
 };

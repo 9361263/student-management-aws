@@ -18,23 +18,19 @@ const recordAttendance = async (req, res) => {
           DO UPDATE SET status = EXCLUDED.status, remarks = EXCLUDED.remarks, created_at = CURRENT_TIMESTAMP
           RETURNING *
         `;
-        try {
-          const r = await query(sql, [
-            rec.studentId,
-            rec.subjectId,
-            rec.attendanceDate,
-            rec.status.toUpperCase(),
-            rec.remarks || null,
-          ]);
-          results.push(r.rows[0]);
-        } catch (err) {
-          console.error('Error inserting individual attendance record:', err.message);
-        }
+        const r = await query(sql, [
+          rec.studentId,
+          rec.subjectId,
+          rec.attendanceDate,
+          rec.status.toUpperCase(),
+          rec.remarks || null,
+        ]);
+        results.push(r.rows[0]);
       }
 
       return res.status(200).json({
         success: true,
-        message: `Batch attendance processed: ${results.length} records updated.`,
+        message: `Batch attendance processed: ${results.length} records updated in AWS RDS.`,
         records: results,
       });
     }
@@ -55,39 +51,24 @@ const recordAttendance = async (req, res) => {
       RETURNING *
     `;
 
-    try {
-      const result = await query(singleSql, [
-        parseInt(studentId, 10),
-        parseInt(subjectId, 10),
-        attendanceDate,
-        status.toUpperCase(),
-        remarks || null,
-      ]);
+    const result = await query(singleSql, [
+      parseInt(studentId, 10),
+      parseInt(subjectId, 10),
+      attendanceDate,
+      status.toUpperCase(),
+      remarks || null,
+    ]);
 
-      return res.status(200).json({
-        success: true,
-        message: 'Attendance recorded successfully.',
-        record: result.rows[0],
-      });
-    } catch (dbErr) {
-      return res.status(200).json({
-        success: true,
-        message: 'Attendance recorded successfully (session mode).',
-        record: {
-          id: Math.floor(Math.random() * 1000),
-          student_id: studentId,
-          subject_id: subjectId,
-          attendance_date: attendanceDate,
-          status,
-          remarks,
-        },
-      });
-    }
+    return res.status(200).json({
+      success: true,
+      message: 'Attendance recorded successfully in database.',
+      record: result.rows[0],
+    });
   } catch (error) {
     console.error('Attendance recording error:', error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to record attendance.',
+      message: 'Failed to record attendance in database.',
     });
   }
 };
@@ -109,44 +90,30 @@ const getStudentAttendance = async (req, res) => {
       ORDER BY a.attendance_date DESC
     `;
 
-    try {
-      const result = await query(sql, [studentId]);
-      const rows = result.rows;
+    const result = await query(sql, [studentId]);
+    const rows = result.rows;
 
-      const totalClasses = rows.length;
-      const presentClasses = rows.filter((r) => r.status === 'PRESENT' || r.status === 'LATE').length;
-      const absentClasses = rows.filter((r) => r.status === 'ABSENT').length;
-      const attendancePercentage = totalClasses > 0 ? ((presentClasses / totalClasses) * 100).toFixed(1) : '100.0';
+    const totalClasses = rows.length;
+    const presentClasses = rows.filter((r) => r.status === 'PRESENT' || r.status === 'LATE').length;
+    const absentClasses = rows.filter((r) => r.status === 'ABSENT').length;
+    const attendancePercentage = totalClasses > 0 ? ((presentClasses / totalClasses) * 100).toFixed(1) : '100.0';
 
-      return res.status(200).json({
-        success: true,
-        summary: {
-          totalClasses,
-          presentClasses,
-          absentClasses,
-          attendancePercentage: parseFloat(attendancePercentage),
-          isLowAttendance: parseFloat(attendancePercentage) < 75.0,
-        },
-        records: rows,
-      });
-    } catch (dbErr) {
-      return res.status(200).json({
-        success: true,
-        summary: {
-          totalClasses: 20,
-          presentClasses: 18,
-          absentClasses: 2,
-          attendancePercentage: 90.0,
-          isLowAttendance: false,
-        },
-        records: [],
-      });
-    }
+    return res.status(200).json({
+      success: true,
+      summary: {
+        totalClasses,
+        presentClasses,
+        absentClasses,
+        attendancePercentage: parseFloat(attendancePercentage),
+        isLowAttendance: parseFloat(attendancePercentage) < 75.0,
+      },
+      records: rows,
+    });
   } catch (error) {
     console.error('Get student attendance error:', error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to fetch attendance details.',
+      message: 'Failed to fetch attendance details from database.',
     });
   }
 };
@@ -176,38 +143,18 @@ const getLowAttendanceStudents = async (req, res) => {
       ORDER BY attendance_percentage ASC
     `;
 
-    try {
-      const result = await query(sql);
-      return res.status(200).json({
-        success: true,
-        threshold: 75.0,
-        count: result.rows.length,
-        students: result.rows,
-      });
-    } catch (dbErr) {
-      return res.status(200).json({
-        success: true,
-        threshold: 75.0,
-        count: 1,
-        students: [
-          {
-            id: 4,
-            roll_number: 'CS2024004',
-            name: 'Deepak Verma',
-            email: 'deepak.v@example.com',
-            department_name: 'Computer Science and Engineering',
-            total_classes: 10,
-            attended_classes: 6,
-            attendance_percentage: 60.0,
-          },
-        ],
-      });
-    }
+    const result = await query(sql);
+    return res.status(200).json({
+      success: true,
+      threshold: 75.0,
+      count: result.rows.length,
+      students: result.rows,
+    });
   } catch (error) {
     console.error('Low attendance report error:', error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to generate low attendance report.',
+      message: 'Failed to generate low attendance report from database.',
     });
   }
 };

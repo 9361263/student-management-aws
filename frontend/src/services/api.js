@@ -2,7 +2,8 @@
 // Frontend API Client with JWT Auth & AWS S3 Upload Helpers
 // ================================================================
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Relative '/api' works seamlessly for both production Nginx and Vite proxy
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 const getHeaders = () => {
   const token = localStorage.getItem('token');
